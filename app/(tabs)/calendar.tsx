@@ -19,12 +19,14 @@ import { FlowColors } from "@/constants/Colors";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
 
-import { useSelectedDate, useMarkedDates } from "@/assets/src/calendar-storage";
+import { useSelectedDate, useMarkedDates, usePredictedDates } from "@/assets/src/calendar-storage";
+import { store } from "expo-router/build/global-state/router-store";
 
 export default function FlowCalendar() {
   // access state management
-  const { date, setDate, setFlow, setId } = useSelectedDate();
+  const { date, setDate, setFlow, setId, setCycleStart, setCycleEnd } = useSelectedDate();
   const storedDatesState = useMarkedDates();
+  const predictedDatesState = usePredictedDates();
 
   // can also be used like this
   // const selectedDate = useSelectedDate().date
@@ -44,7 +46,10 @@ export default function FlowCalendar() {
   useEffect(() => {
     function refreshCalendar(allDays: DayData[]) {
       if (allDays.length !== 0) {
+        
         allDays.forEach((day: any) => {
+          setCycleStart(day?.is_cycle_start ? day.is_cycle_start : false)
+          setCycleEnd(day?.is_cycle_end ? day.is_cycle_end : false)
           storedDatesState[day.date] = {
             marked: true,
             dotColor:
@@ -54,6 +59,7 @@ export default function FlowCalendar() {
             selected: day.date === today,
           };
         });
+        predictCycle();
         setDate(today);
       } else {
         Object.keys(storedDatesState).forEach((date) => {
@@ -63,6 +69,7 @@ export default function FlowCalendar() {
             marked: false,
           };
         });
+        predictCycle();
         setDate(today);
       }
     }
@@ -92,6 +99,8 @@ export default function FlowCalendar() {
       //set other values of selecteDateState (if they exist)
       setFlow(day?.flow_intensity ? day.flow_intensity : 0);
       setId(day?.id ? day.id : 0);
+      setCycleStart(day?.is_cycle_start ? day.is_cycle_start : false)
+      setCycleEnd(day?.is_cycle_end ? day.is_cycle_end : false)
 
       // reset old selected date
       Object.keys(storedDatesState).forEach((date) => {
@@ -125,6 +134,30 @@ export default function FlowCalendar() {
     Keyboard.dismiss();
   };
 
+  function predictCycle(){
+
+    Object.keys(storedDatesState).forEach((date) => {
+
+      var currDate = new Date(date)
+      currDate.setDate(currDate.getDate() + 23)
+      var newDate = currDate.toISOString().split("T")[0]
+
+      // iterate through all stored dates, set selected = false
+      if (storedDatesState[date].dotColor != 'transparent'){
+
+        predictedDatesState[newDate] = {
+          ...storedDatesState[date],
+          selected: false,
+        }
+      }
+      else{
+
+        delete predictedDatesState[newDate]
+
+      }
+  })
+
+}
   const themeKey = theme.dark ? "dark-theme" : "light-theme";
 
   return (
@@ -145,7 +178,7 @@ export default function FlowCalendar() {
               >
                 <Calendar
                   maxDate={today}
-                  markedDates={{ ...storedDatesState }}
+                  markedDates={{ ...storedDatesState, ...predictedDatesState }}
                   enableSwipeMonths={true}
                   onDayPress={(day: { dateString: string }) =>
                     setDate(day.dateString)
@@ -178,3 +211,4 @@ export default function FlowCalendar() {
     </SafeAreaProvider>
   );
 }
+

@@ -2,8 +2,8 @@ export interface DayData {
   id: number;
   date: string;
   flow_intensity: number;
-  is_cycle_start?: boolean;
-  is_cycle_end?: boolean;
+  is_cycle_start: boolean;
+  is_cycle_end: boolean;
   notes?: string;
 }
 
@@ -23,6 +23,8 @@ export interface DayDataStore extends DayData {
   setId: (num: number) => void;
   setFlow: (flow: number) => void;
   setNotes: (text: string) => void;
+  setCycleStart: (value: boolean) => void;
+  setCycleEnd: (value: boolean) => void;
   reset: () => void;
 }
 

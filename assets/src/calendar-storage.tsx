@@ -19,6 +19,8 @@ const initialDay: DayData = {
   id: 0,
   date: "",
   flow_intensity: 0,
+  is_cycle_end: false,
+  is_cycle_start: false
 };
 
 //creates DayDataStore interface to store the Selected Day Information
@@ -46,10 +48,18 @@ export const useSelectedDate = create<DayDataStore>((set) => ({
   setNotes: (text: string) => {
     set(() => ({ notes: text }));
   },
+  setCycleStart: (value: boolean) => {
+    set(() => ({ is_cycle_start: value ? true : false}))
+  },
+  setCycleEnd: (value: boolean) => {
+    set(() => ({ is_cycle_end: value ? true : false}))
+  },
   reset: () => set(initialDay),
 }));
 
 export const useMarkedDates = create<MarkedDates>((set) => ({}));
+
+export const usePredictedDates = create<MarkedDates>((set) => ({}));
 
 export const useData = create<LoadData>((set) => ({
   data: [],
